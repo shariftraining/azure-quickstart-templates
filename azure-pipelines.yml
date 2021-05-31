@@ -1,0 +1,28 @@
+variables:
+  ARM_PASS: $(adminpass)
+
+trigger:
+- none
+
+pool: 'default'
+
+steps:
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '101-webapp-managed-mysql'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'ARMME'
+    subscriptionId: 'f7cba986-d919-4da7-ae42-5614b2266234'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'ARMPipelinesSHARIF-rg'
+    location: 'westeurope'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.json'
+    csmParametersFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.parameters.json'
+    overrideParameters: '-siteName $(siteName) -administratorLogin $(adminUser) -administratorLoginPassword $(ARM_PASS)'
+    deploymentMode: 'Incremental'
